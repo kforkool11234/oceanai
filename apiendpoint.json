@@ -1,0 +1,84 @@
+{
+    "endpoints": [
+        {
+            "path": "/",
+            "method": "GET",
+            "description": "Health check endpoint to verify the API is running.",
+            "parameters": [],
+            "body": null,
+            "response": {
+                "message": "Autonomous QA Agent API is running (Flask)."
+            }
+        },
+        {
+            "path": "/upload",
+            "method": "POST",
+            "description": "Uploads one or more files (PDF, HTML) to the knowledge base directory.",
+            "content_type": "multipart/form-data",
+            "parameters": [],
+            "body": {
+                "files": "List of file objects (required)"
+            },
+            "response": {
+                "message": "Successfully uploaded X files.",
+                "files": [
+                    "filename1.pdf",
+                    "filename2.html"
+                ]
+            }
+        },
+        {
+            "path": "/build-kb",
+            "method": "POST",
+            "description": "Triggers the ingestion process to process uploaded documents and build the vector database.",
+            "parameters": [],
+            "body": null,
+            "response": {
+                "message": "Ingestion complete. Vector DB updated."
+            }
+        },
+        {
+            "path": "/generate-tests",
+            "method": "POST",
+            "description": "Generates a list of test cases based on a provided feature description or query.",
+            "parameters": [
+                {
+                    "name": "query",
+                    "in": "query",
+                    "type": "string",
+                    "required": true,
+                    "description": "The feature description to generate tests for."
+                }
+            ],
+            "body": null,
+            "response": [
+                {
+                    "test_id": "TC-001",
+                    "feature": "Checkout",
+                    "test_scenario": "Verify user can checkout with valid details",
+                    "expected_result": "Order placed successfully",
+                    "grounded_in": "checkout.html"
+                }
+            ]
+        },
+        {
+            "path": "/generate-script",
+            "method": "POST",
+            "description": "Generates a Selenium Python script for a specific test case.",
+            "content_type": "application/json",
+            "parameters": [],
+            "body": {
+                "test_case": {
+                    "test_id": "string",
+                    "feature": "string",
+                    "test_scenario": "string",
+                    "expected_result": "string",
+                    "grounded_in": "string"
+                }
+            },
+            "response": {
+                "script_code": "from selenium import webdriver..."
+            }
+        }
+    ]
+}
