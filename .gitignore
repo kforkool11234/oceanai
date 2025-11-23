@@ -27,3 +27,4 @@ chroma_db/
 instance/
 .pytest_cache/
 *.log
+deployment.md

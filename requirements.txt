@@ -16,3 +16,4 @@ python-multipart
 python-dotenv
 unstructured
 markdown
+gunicorn
