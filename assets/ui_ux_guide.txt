@@ -1,0 +1,16 @@
+UI/UX Guidelines
+
+1. Colors
+- Primary Button (Pay Now): Green (#28a745)
+- Error Text: Red
+- Success Message: Green
+- Background: White/Light Gray
+
+2. Layout
+- Two-column layout on desktop: Form on left, Cart on right.
+- Responsive design for mobile.
+
+3. Interactions
+- Hover effects on buttons.
+- Real-time updates for total price when shipping changes or discount is applied.
+- Inline validation errors should appear immediately on submit if invalid.
