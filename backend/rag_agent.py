@@ -90,7 +90,7 @@ def generate_selenium_script(test_case_json):
     - Use correct selectors based on the HTML context provided.
     - Include assertions to verify the Expected Result.
     - The script should be complete and runnable.
-    - Assume the HTML file is at `file:///C:/Users/kaush/OneDrive/Desktop/oceanai/qa_agent/assets/checkout.html` (Adjust path if needed but keep it local).
+    - Assume the HTML file is at file:///C:/path/to/assets/checkout.html
     
     Output ONLY the Python code. No markdown formatting like ```python.
     """

@@ -1,10 +1,17 @@
 import streamlit as st
-import requests
-import json
 import os
+import sys
 
-# Backend API URL
-API_URL = "http://localhost:8001"
+# Add the parent directory to sys.path to allow imports from backend
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from backend.ingestion import ingest_docs
+from backend.rag_agent import generate_test_cases, generate_selenium_script
+from werkzeug.utils import secure_filename
+
+# Paths
+DOCS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data/docs"))
+os.makedirs(DOCS_PATH, exist_ok=True)
 
 st.set_page_config(page_title="Autonomous QA Agent", layout="wide")
 
@@ -12,7 +19,7 @@ st.title("🤖 Autonomous QA Agent")
 
 # Sidebar
 st.sidebar.header("Configuration")
-st.sidebar.info("Ensure the Backend is running on port 8000 and Ollama is serving.")
+st.sidebar.info("This app runs entirely in Streamlit. Ensure Ollama is serving.")
 
 # Tabs
 tab1, tab2, tab3 = st.tabs(["📚 Knowledge Base", "🧪 Test Case Generation", "📜 Script Generation"])
@@ -25,25 +32,26 @@ with tab1:
     
     if st.button("Upload & Build KB"):
         if uploaded_files:
-            files = [('files', (file.name, file, file.type)) for file in uploaded_files]
             try:
-                with st.spinner("Uploading files..."):
-                    response = requests.post(f"{API_URL}/upload", files=files)
+                saved_files = []
+                with st.spinner("Uploading and saving files..."):
+                    for file in uploaded_files:
+                        if file.name == '':
+                            continue
+                        filename = secure_filename(file.name)
+                        file_path = os.path.join(DOCS_PATH, filename)
+                        with open(file_path, "wb") as f:
+                            f.write(file.getbuffer())
+                        saved_files.append(filename)
                 
-                if response.status_code == 200:
-                    st.success("Files uploaded successfully!")
+                st.success(f"Successfully saved {len(saved_files)} files.")
                     
-                    with st.spinner("Ingesting documents into Vector DB..."):
-                        build_response = requests.post(f"{API_URL}/build-kb")
+                with st.spinner("Ingesting documents into Vector DB..."):
+                    result = ingest_docs()
+                    st.success(f"Knowledge Base Built! {result}")
                     
-                    if build_response.status_code == 200:
-                        st.success(f"Knowledge Base Built! {build_response.json()['message']}")
-                    else:
-                        st.error(f"Error building KB: {build_response.text}")
-                else:
-                    st.error(f"Error uploading files: {response.text}")
             except Exception as e:
-                st.error(f"Connection Error: {e}")
+                st.error(f"Error: {e}")
         else:
             st.warning("Please upload at least one file.")
 
@@ -57,16 +65,12 @@ with tab2:
         if feature_query:
             try:
                 with st.spinner("Generating test cases... (This may take a while)"):
-                    response = requests.post(f"{API_URL}/generate-tests", params={"query": feature_query})
+                    test_cases = generate_test_cases(feature_query)
                 
-                if response.status_code == 200:
-                    test_cases = response.json()
-                    st.session_state['test_cases'] = test_cases
-                    st.success(f"Generated {len(test_cases)} test cases.")
-                else:
-                    st.error(f"Error generating tests: {response.text}")
+                st.session_state['test_cases'] = test_cases
+                st.success(f"Generated {len(test_cases)} test cases.")
             except Exception as e:
-                st.error(f"Connection Error: {e}")
+                st.error(f"Error generating tests: {e}")
         else:
             st.warning("Please enter a feature description.")
             
@@ -92,16 +96,11 @@ with tab3:
             
             try:
                 with st.spinner("Generating Selenium script..."):
-                    payload = {"test_case": selected_test_case}
-                    response = requests.post(f"{API_URL}/generate-script", json=payload)
+                    script_code = generate_selenium_script(selected_test_case)
                 
-                if response.status_code == 200:
-                    script_code = response.json()['script_code']
-                    st.subheader("Generated Python Script")
-                    st.code(script_code, language='python')
-                else:
-                    st.error(f"Error generating script: {response.text}")
+                st.subheader("Generated Python Script")
+                st.code(script_code, language='python')
             except Exception as e:
-                st.error(f"Connection Error: {e}")
+                st.error(f"Error generating script: {e}")
     else:
         st.info("Please generate test cases in the previous tab first.")
